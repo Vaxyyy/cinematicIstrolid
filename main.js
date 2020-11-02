@@ -1,43 +1,10 @@
-/*
- * build 0.6.7
- * 
- * CinematicIstrolid
- * by Vaxyyy
- * 
- * ---------------------------------------------
- *
- * press 't' to turn CinematicIstrolid on and off.
- * 
- * ---------------------------------------------
- * 
- * ci.time
- *    number: default time in milliseconds.
- * 
- * ci.enabled
- *    true/false: code on or off.
- * 
- * ci.playerName
- *    name: default name.
- * 
- * ci.mode
- *    0: follows all ci.playerName units
- *    1: follows 1 units at a time.
- *    2: follows all units.
- * 
- * ci.resetTimer
- *    number: new time in milliseconds.
- * 
- * ci.newPlayerName
- *    name: new player name to follow.
- */
 var ci = ci || {
     time: 3000, // 3sec
     enabled: false,
+    changing: false,
     playerName: commander.name.toLowerCase(),
     intv: null,
     mode: 2,
-    window_body_orig: window.body,
-    battlemode_onkeydown_orig: battleMode.onkeydown,
 
     newPlayerName: function (newName) {
         let ref = newName.toLowerCase();
@@ -51,10 +18,11 @@ var ci = ci || {
         return ci.intv = setInterval(() => {
             if (ci.enabled) {
                 battleMode.centerOnUnit = true;
+                commander.selection = [];
                 let owner = commander.number,
-                    unitList = []
-                    commander.selection = [];
-                for (var p of intp.players) if (p.name.toLowerCase() === ci.playerName) owner = p.number;
+                    unitList = [];
+                for (var p of intp.players)
+                    if (p.name.toLowerCase() === ci.playerName) owner = p.number;
                 for (let i in intp.things) {
                     unit = intp.things[i];
                     if (unit.name === 'Unit' && !(unit.side === 'neutral' || unit.side === 'enemy')) {
@@ -65,7 +33,6 @@ var ci = ci || {
                         } else if (ci.mode === 1) {
                             unitList.push(unit);
                         } else if (ci.mode === 2) {
-                            console.log(unit);
                             commander.selection.push(unit);
                         }
                     }
@@ -80,53 +47,107 @@ var ci = ci || {
         }, ci.time);
     },
     drawBox: function () {
-        if (ci.enabled && ui.mode === 'battle') {
+        eval(onecup['import']());
 
-            eval(onecup['import']());
+        css('.center', function () {
+            display('block');
+            margin_left('auto');
+            margin_right('auto');
+        });
+        css('.ci-mainBox', function () {
+            background_color('rgba(0,0,0,.4)');
+            border_radius('0px 0px 12px 12px');
+            text_align('center');
+            margin_right('auto');
+            margin_left('auto');
+            color('white')
+            padding(4);
+            width(164);
+            height(64);
+            top(0);
+        });
+        css('.ci-settingButton', function () {
+            position('absolute')
+            background_color('rgba(0,0,0,.4)');
+            border_radius('0px 0px 0px 12px');
+            text_align('center');
+            color('white');
+            font_size(12);
+            height(64);
+            width(64);
+            right(0);
+            top(0);
+        });
 
-            css('.center', function () {
-                display('block');
-                margin_left('auto');
-                margin_right('auto');
-                //width('50%');
+        div('.ci-mainBox', () => {
+            text('Cinematic Istrolid');
+            img({
+                src: 'img/ui/rank/rank13.png',
+                width: 32,
+                height: 32,
+                class: 'center'
             });
-            css('.ci-mainBox', function () {
-                background_color('rgba(0,0,0,.2)');
-                border_radius('0px 0px 5px 5px');
-                text_align('center');
-                margin_right('auto');
-                margin_left('auto');
-                display('block');
-                color('white')
-                padding(4);
-                width(164);
-                height(64);
+        });
+
+        div('.ci-settingButton', () => {
+            img({
+                src: 'img/ui/settings.png',
+                width: 44,
+                height: 44,
+                class: 'center'
             });
-            div('.ci-mainBox', () => {
-                text('Cinematic Istrolid');
-                img({
-                    src: 'https://mk0localeyesvidpssgk.kinstacdn.com/wp-content/uploads/2019/05/camera.png',
-                    width: 32,
-                    height: 32,
-                    class: 'center'
-                });
+            text('Settings');
+            onclick(e => {
+                ci.changing = !ci.changing;
             });
+        });
+
+        if (ci.changing) {
+            ci.drawSettingsBox();
         }
     },
+    drawSettingsBox: function () {
+        eval(onecup['import']());
+
+        css('.ci-settingBox', function () {
+            position('absolute')
+            background_color('rgba(0,0,0,.4)');
+            border_radius('12px 0px 0px 12px');
+            text_align('center');
+            color('white');
+            font_size(14);
+            height(512);
+            width(256);
+            right(0);
+            top(128);
+        });
+
+        div('.ci-settingBox', () => {
+            text('test');
+        });
+    },
 };
+let window_body_orig = window.body;
+let window_onkeydown_orig = window.onkeydown;
 
 window.body = function () {
-    let ret = ci.window_body_orig.call(this);
-    ci.drawBox();
+    let ret = window_body_orig.call(this);
+    if (ci.enabled && ui.mode === 'battle') {
+        ci.drawBox();
+    }
     return ret;
 };
-battleMode.onkeydown = e => {
-    if (e.key === 't') {
+window.DEFAULT_SETTINGS.Cinematic = {keys:[{ which: 84 }, null ]}
+window.onkeydown = e => {
+    let ret = window_onkeydown_orig.call(this, e);
+    if (e.target.type === "text" || e.target.type === "password" || e.target.nodeName === "TEXTAREA") {
+        return;
+    }
+    if (settings.key(e, "Cinematic") && ui.mode === 'battle') {
         ci.enabled = !ci.enabled;
         ci.resetTimer(ci.time)
         ui.show = !ui.show;
         onecup.refresh();
-    } else {
-        return ci.battlemode_onkeydown_orig.call(this, e);
     }
+    return ret;
 };
