@@ -3,14 +3,14 @@
 <!--
   hey thanks for looking at my code
   if you see anything wrong make an Issue it will help, thanks :)
-  build 0.6.7
+  build 0.7.0
 -->
 
 
 
 ---
 
-### press 't' to turn CinematicIstrolid on and off.
+### DEFAULT_SETTINGS to turn CinematicIstrolid on and off is t (to change goto settings).
 
 
 ### ci.time
@@ -41,6 +41,7 @@
 
 ## Done
 
-- [x] got it working
+- [x] get hotkey working
+- [x] get it working
 
 ---
