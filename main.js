@@ -2,7 +2,7 @@ var ci = ci || {
     time: 3000, // 3sec
     enabled: false,
     changing: false,
-    playerName: commander.name.toLowerCase(),
+    playerName: commander,
     intv: null,
     mode: 2,
 
