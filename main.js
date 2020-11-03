@@ -1,16 +1,19 @@
 var ci = ci || {
     time: 3000, // 3sec
+    zoom: 1.8,
     enabled: false,
     changing: false,
-    playerName: commander,
+    showPlayerDropDown: false,
+    showModesDropDown: false,
+    playerName: commander.name,
     intv: null,
     mode: 2,
+    modes: [0, 1, 2],
 
     newPlayerName: function (newName) {
-        let ref = newName.toLowerCase();
-        ci.playerName = ref;
+        ci.playerName = newName;
         ci.resetTimer(ci.time)
-        return ci.playerName;
+        return newName;
     },
     resetTimer: function (newTime) {
         ci.time = newTime
@@ -22,7 +25,7 @@ var ci = ci || {
                 let owner = commander.number,
                     unitList = [];
                 for (var p of intp.players)
-                    if (p.name.toLowerCase() === ci.playerName) owner = p.number;
+                    if (p.name === ci.playerName) owner = p.number;
                 for (let i in intp.things) {
                     unit = intp.things[i];
                     if (unit.name === 'Unit' && !(unit.side === 'neutral' || unit.side === 'enemy')) {
@@ -38,7 +41,7 @@ var ci = ci || {
                     }
                 }
                 if (ci.mode === 1) commander.selection.push(unitList[Math.floor(Math.random() * unitList.length)]);
-                battleMode.zoom = 1.8;
+                battleMode.zoom = ci.zoom;
             } else {
                 battleMode.centerOnUnit = false;
                 commander.selection = [];
@@ -109,7 +112,20 @@ var ci = ci || {
     drawSettingsBox: function () {
         eval(onecup['import']());
 
-        css('.ci-settingBox', function () {
+        css('.center', function () {
+            display('block');
+            margin_left('auto');
+            margin_right('auto');
+        });
+        css('.right', function () {
+            display('block');
+            margin_left('auto');
+            margin_right(0);
+        });
+        css('.border_radius12', function () {
+            border_radius(12);
+        });
+        div('.ci-settingBox', () => {
             position('absolute')
             background_color('rgba(0,0,0,.4)');
             border_radius('12px 0px 0px 12px');
@@ -120,10 +136,123 @@ var ci = ci || {
             width(256);
             right(0);
             top(128);
-        });
 
-        div('.ci-settingBox', () => {
-            text('test');
+            div('.ci-playerList', () => {
+                div('.ci-button', () => {
+
+                    background_color('rgba(0,0,0,.4)');
+                    border_radius(12);
+                    padding(4);
+                    margin(12)
+                    text_align('center');
+                    color('white');
+
+                    text('players');
+                    onclick(e => {
+                        ci.showPlayerDropDown = !ci.showPlayerDropDown;
+                    });
+                });
+                if (ci.showPlayerDropDown) {
+                    for (let i = 0; i < intp.players.length; i++) {
+                        p = intp.players[i];
+
+                        div('.ci-player', () => {
+
+                            background_color('rgba(0,0,0,.4)');
+                            border_radius(12);
+                            padding(4);
+                            margin(12)
+                            text_align('left');
+                            color('white');
+
+                            text(p.name);
+                            onclick(e => {
+                                ci.newPlayerName(intp.players[i].name);
+                                ci.showPlayerDropDown = !ci.showPlayerDropDown;
+                            });
+                        });
+                    }
+                }
+            });
+            div('.ci-modesList', () => {
+
+                div('.button', () => {
+
+                    background_color('rgba(0,0,0,.4)');
+                    border_radius(12);
+                    padding(4);
+                    margin(12)
+                    text_align('center');
+                    color('white');
+
+                    text('modes');
+                    onclick(e => {
+                        ci.showModesDropDown = !ci.showModesDropDown;
+                    });
+                });
+
+                if (ci.showModesDropDown) {
+                    for (let m of ci.modes) {
+                        div('.ci-mode', () => {
+
+                            background_color('rgba(0,0,0,.4)');
+                            border_radius(12);
+                            padding(4);
+                            margin(12)
+                            text_align('left');
+                            color('white');
+
+                            text(m);
+                            onclick(e => {
+                                ci.mode = m;
+                                ci.showModesDropDown = !ci.showModesDropDown;
+                            });
+                        });
+                    }
+                }
+            });
+            div('.ci-time', () => {
+
+                background_color('rgba(0,0,0,.4)');
+                border_radius(12);
+                padding(4);
+                margin(12)
+                text_align('left');
+                color('white');
+
+                text('time');
+
+                input('.ci-time_input, border_radius12', {
+                    style: 'right',
+                    type: 'text',
+                    placeholder: ci.time
+                }, function () {
+                    return oninput(function (e) {
+                        return ci.resetTimer(e.target.value)
+                    });
+                });
+            });
+            div('.ci-zoom', () => {
+                background_color('rgba(0,0,0,.4)');
+                border_radius(12);
+                padding(4);
+                margin(12)
+                text_align('left');
+                color('white');
+
+                text('zoom');
+
+                input('.ci-zoom_input, border_radius12', {
+                    style: 'right',
+                    type: 'number',
+                    placeholder: ci.zoom
+                }, function () {
+                    return oninput(function (e) {
+                        ci.zoom = e.target.value
+                        return ci.resetTimer(ci.time)
+                    });
+                });
+            });
         });
     },
 };
@@ -137,13 +266,15 @@ window.body = function () {
     }
     return ret;
 };
-window.DEFAULT_SETTINGS.Cinematic = {keys:[{ which: 84 }, null ]}
+window.DEFAULT_SETTINGS.Cinematic = {
+    keys: [{
+        which: 84
+    }, null]
+}
 window.onkeydown = e => {
     let ret = window_onkeydown_orig.call(this, e);
-    if (e.target.type === "text" || e.target.type === "password" || e.target.nodeName === "TEXTAREA") {
-        return;
-    }
-    if (settings.key(e, "Cinematic") && ui.mode === 'battle') {
+    if (e.target.type === "text" || e.target.type === "password" || e.target.nodeName === "TEXTAREA") return;
+    else if (settings.key(e, "Cinematic") && ui.mode === 'battle') {
         ci.enabled = !ci.enabled;
         ci.resetTimer(ci.time)
         ui.show = !ui.show;
