@@ -3,7 +3,7 @@
 <!--
   hey thanks for looking at my code
   if you see anything wrong make an Issue it will help, thanks :)
-  build 0.7.0
+  build 0.8.0
 -->
 
 
